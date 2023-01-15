@@ -10,7 +10,7 @@
 	</parent>
 	<groupId>com.jonatas-almeida-dev</groupId>
 	<artifactId>cancun-booking-api</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>0.0.1</version>
 	<name>cancun-booking-api</name>
 	<description>A booking API for the very last hotel in Cancun</description>
 	<properties>
