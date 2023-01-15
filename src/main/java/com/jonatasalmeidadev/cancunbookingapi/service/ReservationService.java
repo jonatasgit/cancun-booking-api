@@ -7,11 +7,15 @@ import com.jonatasalmeidadev.cancunbookingapi.entity.RoomNotFoundException;
 import com.jonatasalmeidadev.cancunbookingapi.repository.ReservationRepository;
 import com.jonatasalmeidadev.cancunbookingapi.repository.RoomRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Objects;
 import java.util.Optional;
 
 @Service
@@ -23,7 +27,7 @@ public class ReservationService {
     @Autowired
     private RoomRepository roomRepository;
 
-    public Reservation book(Reservation reservation){
+    public Reservation reserve(Reservation reservation){
         var checkIn = reservation.getCheckIn();
         var checkOut = reservation.getCheckOut();
         var today = LocalDateTime.now();
@@ -65,37 +69,46 @@ public class ReservationService {
                 }
             }
         }
-//        int roomIndex = 1;
-//        for(Room room : allRooms){
-//            for(Reservation placedReservation : placedReservations){
-//                if(room.getId().equals(placedReservation.getRoom().getId())){
-//                    var rCheckIn = placedReservation.getCheckIn();
-//                    var rCheckOut = placedReservation.getCheckOut();
-//
-//                    if((rCheckIn.isAfter(checkIn) || rCheckIn.isEqual(checkIn)) && (rCheckIn.isBefore(checkOut) || rCheckIn.isEqual(checkOut))){
-//                        availableRooms.remove(room);
-//                        if((allRooms.size() == roomIndex && availableRooms.isEmpty())){
-//                            throw new RoomNotFoundException("Could not find any room available is this period.");
-//                        }
-//                    } else if ((rCheckOut.isAfter(checkIn) || rCheckOut.isEqual(checkIn)) && (rCheckOut.isBefore(checkOut) || rCheckOut.isEqual(checkOut))) {
-//                        availableRooms.remove(room);
-//                        if((allRooms.size() == roomIndex && availableRooms.isEmpty())){
-//                            throw new RoomNotFoundException("Could not find any room available is this period.");
-//                        }
-//                    }
-//                }
-//            }
-//            roomIndex++;
-//        }
 
         setBalanceAmount(reservation, daysOfStay);
         return reservationRepository.save(reservation);
-        //return ResponseEntity.ok().body("Booked succesfully!");
     }
 
     static void setBalanceAmount(Reservation reservation, Long daysOfStay){
         var pricePerDay = reservation.getRoom().getPrice();
         var amount = daysOfStay * pricePerDay;
         reservation.setBalanceAmount(amount);
+    }
+
+    public ResponseEntity<?> deleteReserve(Long id){
+        try {
+            this.reservationRepository.deleteById(id);
+            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+        }catch (Exception e){
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+    public ResponseEntity<?> updateReserve(Long id, Reservation updatedReservation){
+        try {
+            var reservation = this.reservationRepository.findById(id);
+
+            if(reservation.isPresent()){
+                Reservation _reservation = reservation.get();
+                _reservation.setRoom(roomRepository.findById(updatedReservation.getRoom().getId()).orElseThrow(() ->
+                        new RoomNotFoundException("Room not found for id: " + updatedReservation.getRoom().getId())
+                ));
+                _reservation.setGuests(updatedReservation.getGuests());
+                if(Objects.nonNull(updatedReservation.getCheckIn()) || Objects.nonNull(updatedReservation.getCheckOut())){
+                    _reservation.setCheckIn(updatedReservation.getCheckIn());
+                    _reservation.setCheckOut(updatedReservation.getCheckOut());
+                    setBalanceAmount(_reservation, Duration.between(_reservation.getCheckIn(), _reservation.getCheckOut()).toDays());
+                }
+                return new ResponseEntity<>(this.reservationRepository.save(_reservation), HttpStatus.OK);
+            } else {
+                return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            }
+        }catch (Exception e){
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 }

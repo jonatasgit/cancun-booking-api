@@ -30,11 +30,19 @@ public class BookingController {
 
     @GetMapping(value = "/rooms")
     ResponseEntity<List<Room>> allRooms(@RequestParam LocalDate checkIn, @RequestParam LocalDate checkOut){
-        System.out.println("in, out " +  checkIn + " / " + checkOut);
         return new ResponseEntity<>(this.roomService.listAvailableRooms(checkIn, checkOut), HttpStatus.OK);
     }
-    @PostMapping(value = "/book")
-    public ResponseEntity<?> book(@RequestBody(required = true) Reservation reservation){
-        return new ResponseEntity<>(this.reservationService.book(reservation), HttpStatus.OK);
+    @PostMapping(value = "/reserve")
+    public ResponseEntity<?> createReserve(@RequestBody(required = true) Reservation reservation){
+        return new ResponseEntity<>(this.reservationService.reserve(reservation), HttpStatus.OK);
+    }
+
+    @DeleteMapping(value = "/reserve/{id}")
+    public ResponseEntity<?> deleteReserve(@PathVariable("id") long id){
+        return this.reservationService.deleteReserve(id);
+    }
+    @PutMapping(value = "/reserve/{id}")
+    public ResponseEntity<?> updateReserve(@PathVariable("id") long id, @RequestBody(required = true) Reservation reservation){
+        return this.reservationService.updateReserve(id, reservation);
     }
 }
