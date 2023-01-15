@@ -1,0 +1,3 @@
+INSERT INTO hotel (id, hotel_name, location, rating, phone) VALUES (10, 'Cancun Great Palace', 'Quintanna Roo, Cancun', 3, '0300 1234 5678');
+INSERT INTO room (id, hotel_id, room_name, capacity, price, facilities) VALUES (1, 10, 'Standard', 2, 57.90, 'mini-fridge');
+INSERT INTO room (id, hotel_id, room_name, capacity, price, facilities) VALUES (2, 10, 'Deluxe', 3, 99.90, 'mini-fridge, king-size bedroom');
